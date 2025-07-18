@@ -21,14 +21,14 @@
         .card-content { flex-grow: 1; overflow: auto; scrollbar-width: none; }
         .card-content::-webkit-scrollbar { display: none; }
 
-        /* Grid Layout */
+        /* UPDATED Grid Layout */
         #header { grid-column: 1 / -1; grid-row: 1; text-align: center; padding-bottom: 0.5rem; }
         #general-metrics { grid-column: 1 / 5; grid-row: 2 / 7; }
         #user-metrics { grid-column: 1 / 5; grid-row: 7 / 13; }
         #top-holders { grid-column: 5 / 9; grid-row: 2 / 8; }
         #prolific-traders { grid-column: 5 / 9; grid-row: 8 / 13; }
-        #economic-metrics { grid-column: 9 / 13; grid-row: 2 / 7; }
-        #fun-metrics { grid-column: 9 / 13; grid-row: 7 / 13; }
+        /* #economic-metrics was here */
+        #fun-metrics { grid-column: 9 / 13; grid-row: 2 / 13; } /* Stretched to fill space */
         #rarity-distribution { grid-column: 13 / 17; grid-row: 2 / 8; }
         #system-metrics { grid-column: 13 / 17; grid-row: 8 / 13; }
         #peak-hours { grid-column: 17 / -1; grid-row: 2 / 13; }
@@ -60,7 +60,9 @@
         <div id="user-metrics" class="card"><h3 class="card-title">User Activity</h3><div class="card-content"><ul id="user-metrics-list" class="stat-list"><li class="loading-text">Loading...</li></ul></div></div>
         <div id="top-holders" class="card"><h3 class="card-title">Top Holders (Quantity)</h3><div class="card-content"><table id="top-holders-table"><thead><tr><th>Rank</th><th>Username</th><th># Gifts</th></tr></thead><tbody id="top-holders-body"><li class="loading-text">Loading...</li></tbody></table></div></div>
         <div id="prolific-traders" class="card"><h3 class="card-title">Top Traders (Simulated)</h3><div class="card-content"><table id="prolific-traders-table"><thead><tr><th>Rank</th><th>Username</th><th># Outgoing</th></tr></thead><tbody id="prolific-traders-body"><li class="loading-text">Loading...</li></tbody></table></div></div>
-        <div id="economic-metrics" class="card"><h3 class="card-title">Market Snapshot</h3><div class="card-content"><ul id="economic-metrics-list" class="stat-list"><li class="loading-text">Loading...</li></ul></div></div>
+        
+        <!-- economic-metrics card REMOVED -->
+
         <div id="fun-metrics" class="card"><h3 class="card-title">Community Fun Facts</h3><div class="card-content"><ul id="fun-metrics-list" class="stat-list"><li class="loading-text">Loading...</li></ul></div></div>
         <div id="rarity-distribution" class="card"><h3 class="card-title">Rarity Distribution</h3><div class="card-content" style="display: flex; align-items: center; justify-content: center;"><canvas id="rarity-chart"></canvas></div></div>
         <div id="system-metrics" class="card"><h3 class="card-title">System Clocks</h3><div class="card-content"><ul id="system-metrics-list" class="stat-list"><li class="loading-text">Loading...</li></ul></div></div>
@@ -108,14 +110,7 @@
                 render('top-holders-body', um.top_holders.map((h, i) => `<tr><td>${i+1}</td><td>${h.username}</td><td>${h.gift_count.toLocaleString()}</td></tr>`).join(''));
                 render('prolific-traders-body', um.prolific_traders.map((t, i) => `<tr><td>${i+1}</td><td>${t.username}</td><td>${t.transfers_out.toLocaleString()}</td></tr>`).join(''));
 
-                // Economic Metrics
-                const em = data.economic_metrics;
-                const marketContent = Object.entries(em.market_caps).map(([name, cap]) => 
-                    `<li><strong>${name} Cap (Sim):</strong> <span>${cap.toLocaleString()}</span></li>`
-                ).join('') + Object.entries(em.floor_prices).map(([name, num]) => 
-                    `<li><strong>${name} Floor (Sim):</strong> <span>#${num.toLocaleString()}</span></li>`
-                ).join('');
-                render('economic-metrics-list', marketContent);
+                // REMOVED Economic Metrics rendering block
 
                 // System Metrics
                 const sm = data.system_metrics;
@@ -137,7 +132,6 @@
                 const rarityValues = Object.values(rd);
                 const rarityColors = rarityLabels.map(label => getComputedStyle(document.documentElement).getPropertyValue(`--${label.toLowerCase()}-color`).trim());
                 
-                // *** THIS IS THE FIX ***
                 const chartBorderColor = getComputedStyle(document.documentElement).getPropertyValue('--card-bg').trim();
 
                 if (rarityChart) { rarityChart.destroy(); }
