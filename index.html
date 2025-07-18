@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Gifts Analytics</title>
+    <title>Digital Gifts Analytics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
 
@@ -22,8 +24,6 @@
             margin: 0;
             padding: 0;
             width: 100%;
-            height: 100vh;
-            overflow: hidden;
             font-family: 'Roboto', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
@@ -34,10 +34,9 @@
         #main-container {
             display: grid;
             grid-template-columns: repeat(12, 1fr);
-            grid-template-rows: auto 1fr 1fr;
+            grid-auto-rows: minmax(200px, auto);
             gap: 1.5vmin;
             padding: 1.5vmin;
-            height: 100%;
             box-sizing: border-box;
         }
 
@@ -54,31 +53,31 @@
 
         .card-title {
             color: var(--highlight-color);
-            margin-top: 0;
-            margin-bottom: 1.5vmin;
-            font-size: 1.5vw;
+            margin: 0 0 1.5vmin 0;
+            font-size: 1.2vw;
             font-weight: 700;
             border-bottom: 2px solid var(--accent-color);
             padding-bottom: 1vmin;
+            flex-shrink: 0;
         }
         
         .card-content {
             flex-grow: 1;
             overflow-y: auto;
-            -ms-overflow-style: none; /* IE and Edge */
-            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
 
-        .card-content::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, and Opera */
-        }
+        .card-content::-webkit-scrollbar { display: none; }
         
-        #header { grid-column: 1 / -1; grid-row: 1; text-align: center; padding: 1vmin 0; }
-        #stats { grid-column: 1 / 4; grid-row: 2; }
-        #top-holders { grid-column: 4 / 9; grid-row: 2; }
-        #top-models { grid-column: 9 / -1; grid-row: 2; }
-        #rarest-gifts { grid-column: 1 / 7; grid-row: 3; }
-        #collections { grid-column: 7 / -1; grid-row: 3; }
+        #header { grid-column: 1 / -1; text-align: center; padding: 1vmin 0; }
+        #general-stats { grid-column: 1 / 4; grid-row: 2; }
+        #user-engagement-stats { grid-column: 1 / 4; grid-row: 3; }
+        #top-holders { grid-column: 4 / 7; grid-row: 2 / 4; }
+        #collections { grid-column: 7 / 13; grid-row: 2 / 4; }
+        #daily-minting { grid-column: 1 / 7; grid-row: 4; }
+        #misc-leaderboards { grid-column: 7 / 13; grid-row: 4; }
+
 
         h1 {
             color: var(--header-color);
@@ -87,27 +86,35 @@
             text-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
         }
 
-        p {
-            font-size: 1vw;
-            line-height: 1.4;
+        .stat-item {
+            font-size: 0.9vw;
+            line-height: 1.6;
+            border-bottom: 1px solid var(--accent-color);
+            padding: 0.5vmin 0;
         }
+        .stat-item:last-child { border-bottom: none; }
 
-        b, strong {
+        .stat-item strong {
             color: var(--highlight-color);
             font-weight: 700;
+        }
+        .stat-item .value {
+            float: right;
+            font-weight: bold;
+            color: var(--header-color);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.85vw;
+            font-size: 0.8vw;
         }
 
         th, td {
             padding: 0.8vmin;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
-            word-break: break-all;
+            word-break: break-word;
         }
 
         thead th {
@@ -118,59 +125,31 @@
             z-index: 1;
         }
         
-        tbody tr:nth-child(even) {
-            background-color: var(--accent-color);
-        }
-        tbody tr:hover {
-            background-color: #537895;
-        }
-
-        ul {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-            font-size: 0.9vw;
-        }
-
-        ul li {
-            background-color: var(--accent-color);
-            margin-bottom: 0.8vmin;
-            padding: 1vmin;
-            border-radius: 5px;
-            border-left: 4px solid var(--highlight-color);
-        }
+        tbody tr:nth-child(even) { background-color: var(--accent-color); }
+        tbody tr:hover { background-color: #537895; }
 
         .collections-container {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.5vmin;
-            height: 100%;
         }
 
-        .collection-item {
-            flex: 1;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-        
         .collection-item h4 {
             margin: 0 0 1vmin 0;
-            font-size: 1.2vw;
+            font-size: 1.1vw;
             color: var(--header-color);
         }
-        .loading-text {
-            text-align: center;
-            padding: 2vmin;
-            font-style: italic;
-        }
+        .loading-text { text-align: center; padding: 2vmin; font-style: italic; }
 
-        /* Responsive adjustments */
+        #daily-minting-chart-container { position: relative; height: 100%; width: 100%; }
+
         @media (max-width: 1200px) {
-            .card-title { font-size: 2vw; }
-            h1 { font-size: 3.5vw; }
-            p, table, ul { font-size: 1.3vw; }
-            .collection-item h4 { font-size: 1.8vw; }
+            #main-container { display: flex; flex-direction: column; }
+            .card-title { font-size: 4vw; }
+            h1 { font-size: 6vw; }
+            .stat-item { font-size: 2.5vw; }
+            table { font-size: 2.2vw; }
+            .collection-item h4 { font-size: 3vw; }
         }
     </style>
 </head>
@@ -178,202 +157,265 @@
 
     <div id="main-container">
         <div id="header">
-            <h1>Digital Collectibles: A Deep Dive into the Gifts Ecosystem</h1>
+            <h1>Digital Collectibles: Live Ecosystem Dashboard</h1>
         </div>
 
-        <div id="stats" class="card">
-            <h3 class="card-title">General Statistics</h3>
-            <div class="card-content">
-                <p>An overview of the digital gifts ecosystem, highlighting key figures from the dataset.</p>
-                <ul id="general-stats-list">
-                    <li class="loading-text">Loading...</li>
-                </ul>
+        <div id="general-stats" class="card">
+            <h3 class="card-title">Ecosystem Overview</h3>
+            <div id="general-stats-list" class="card-content">
+                <p class="loading-text">Loading...</p>
+            </div>
+        </div>
+        
+        <div id="user-engagement-stats" class="card">
+            <h3 class="card-title">User & Engagement</h3>
+            <div id="user-engagement-list" class="card-content">
+                <p class="loading-text">Loading...</p>
             </div>
         </div>
 
         <div id="top-holders" class="card">
             <h3 class="card-title">Top Gift Holders</h3>
             <div class="card-content">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Username</th>
-                            <th>Full Name</th>
-                            <th># of Gifts</th>
-                        </tr>
-                    </thead>
-                    <tbody id="top-holders-body">
-                        <tr><td colspan="4" class="loading-text">Loading...</td></tr>
-                    </tbody>
+                <table id="top-holders-table">
+                    <thead><tr><th>Rank</th><th>Username</th><th># of Gifts</th></tr></thead>
+                    <tbody><tr id="top-holders-loading"><td colspan="3" class="loading-text">Loading...</td></tr></tbody>
                 </table>
-            </div>
-        </div>
-
-        <div id="top-models" class="card">
-            <h3 class="card-title">Most Common Collectible Models</h3>
-            <div class="card-content">
-                <table>
-                    <thead>
-                        <tr><th>Model Name</th><th>Count</th></tr>
-                    </thead>
-                    <tbody id="top-models-body">
-                        <tr><td colspan="2" class="loading-text">Loading...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="rarest-gifts" class="card">
-            <h3 class="card-title">Rarest Collectible Highlights</h3>
-            <div class="card-content">
-                <p>A selection of the rarest gifts based on model and pattern rarity scores (permille).</p>
-                <ul id="rarest-gifts-list">
-                    <li class="loading-text">Loading...</li>
-                </ul>
             </div>
         </div>
 
         <div id="collections" class="card">
-            <h3 class="card-title">Featured Collections</h3>
-            <div id="collections-container" class="card-content collections-container">
+            <h3 class="card-title">Featured Collection Leaders</h3>
+            <div id="collections-container" class="card-content">
                  <p class="loading-text">Loading...</p>
             </div>
         </div>
+        
+        <div id="daily-minting" class="card">
+            <h3 class="card-title">New Collectibles (Last 30 Days)</h3>
+            <div class="card-content">
+                <div id="daily-minting-chart-container">
+                    <canvas id="daily-minting-chart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div id="misc-leaderboards" class="card">
+            <h3 class="card-title">Live Leaderboards</h3>
+            <div id="misc-leaderboards-container" class="card-content collections-container">
+                <div>
+                    <h4>Most Common Models</h4>
+                    <table id="top-models-table">
+                        <thead><tr><th>Model</th><th>Count</th></tr></thead>
+                        <tbody><tr id="top-models-loading"><td colspan="2" class="loading-text">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+                <div>
+                    <h4>Power Collectors (Diversity)</h4>
+                    <table id="power-collectors-table">
+                        <thead><tr><th>User</th><th>Unique Models</th></tr></thead>
+                        <tbody><tr id="power-collectors-loading"><td colspan="2" class="loading-text">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+                <div>
+                    <h4>Rarest Highlights</h4>
+                    <ul id="rarest-gifts-list"><li class="loading-text">Loading...</li></ul>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const API_URL = 'https://upgrade-a57g.onrender.com/api/stats';
+            let mintingChart = null;
 
-            const generalStatsList = document.getElementById('general-stats-list');
-            const topHoldersBody = document.getElementById('top-holders-body');
-            const topModelsBody = document.getElementById('top-models-body');
-            const rarestGiftsList = document.getElementById('rarest-gifts-list');
-            const collectionsContainer = document.getElementById('collections-container');
+            function format(num) { return num ? num.toLocaleString() : '0'; }
 
-            function renderGeneralStats(stats) {
-                generalStatsList.innerHTML = ''; // Clear loading
-                if (!stats) {
-                    generalStatsList.innerHTML = '<li>Error loading stats.</li>';
-                    return;
-                }
-                generalStatsList.innerHTML += `<li><strong>Total Gifts:</strong> ${stats.total_gifts.toLocaleString()}</li>`;
-                generalStatsList.innerHTML += `<li><strong>Unique Owners:</strong> ${stats.unique_owners.toLocaleString()}</li>`;
-                generalStatsList.innerHTML += `<li><strong>Collectible Items:</strong> ${stats.collectible_items.toLocaleString()}</li>`;
-                generalStatsList.innerHTML += `<li><strong>Non-Collectible:</strong> ${stats.non_collectible_items.toLocaleString()}</li>`;
-                if (stats.most_frequent_gift) {
-                    generalStatsList.innerHTML += `<li><strong>Most Frequent Gift:</strong> "${stats.most_frequent_gift.gift_name}" (${stats.most_frequent_gift.count} instances)</li>`;
-                }
-                if (stats.most_valuable_traded) {
-                    generalStatsList.innerHTML += `<li><strong>Most Valuable Traded:</strong> "${stats.most_valuable_traded.name}" (up to $${stats.most_valuable_traded.price})</li>`;
-                }
+            function renderGeneralStats(data) {
+                const list = document.getElementById('general-stats-list');
+                list.innerHTML = `
+                    <div class="stat-item"><strong>Total Gifts:</strong><span class="value">${format(data.total_gifts)}</span></div>
+                    <div class="stat-item"><strong>Collectible Items:</strong><span class="value">${format(data.collectible_items)}</span></div>
+                    <div class="stat-item"><strong>Non-Collectible:</strong><span class="value">${format(data.non_collectible_items)}</span></div>
+                    <div class="stat-item"><strong>Most Frequent Gift:</strong><span class="value">${data.most_frequent_gift?.gift_name || 'N/A'}</span></div>
+                    <div class="stat-item"><strong>Most Popular Backdrop:</strong><span class="value">${data.most_popular_backdrop?.backdrop_name || 'N/A'}</span></div>
+                    <div class="stat-item"><strong>Most Popular Symbol:</strong><span class="value">${data.most_popular_pattern?.pattern_name || 'N/A'}</span></div>
+                `;
             }
 
-            function renderTopHolders(holders) {
-                topHoldersBody.innerHTML = ''; // Clear loading
-                if (!holders || holders.length === 0) {
-                    topHoldersBody.innerHTML = '<tr><td colspan="4" class="loading-text">No data available.</td></tr>';
-                    return;
-                }
-                holders.forEach((holder, index) => {
-                    const row = `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${holder.username || 'N/A'}</td>
-                            <td>${holder.full_name || 'N/A'}</td>
-                            <td>${holder.gift_count.toLocaleString()}</td>
-                        </tr>`;
-                    topHoldersBody.innerHTML += row;
-                });
+            function renderUserEngagement(data) {
+                const list = document.getElementById('user-engagement-list');
+                list.innerHTML = `
+                    <div class="stat-item"><strong>Total Accounts:</strong><span class="value">${format(data.total_accounts)}</span></div>
+                    <div class="stat-item"><strong>New Users (30d):</strong><span class="value">${format(data.new_users_monthly)}</span></div>
+                    <div class="stat-item"><strong>Avg. Gifts/User:</strong><span class="value">${format(data.avg_gifts_per_user)}</span></div>
+                    <div class="stat-item"><strong>Hidden Gifts:</strong><span class="value">${format(data.hidden_gift_count)}</span></div>
+                    <div class="stat-item"><strong>Active Giveaways:</strong><span class="value">${format(data.active_giveaways)}</span></div>
+                    <div class="stat-item"><strong>Peak Activity Hour (UTC):</strong><span class="value">${data.peak_activity_hour || 'N/A'}</span></div>
+                `;
             }
 
-            function renderTopModels(models) {
-                topModelsBody.innerHTML = ''; // Clear loading
-                if (!models || models.length === 0) {
-                    topModelsBody.innerHTML = '<tr><td colspan="2" class="loading-text">No data available.</td></tr>';
+            function renderTable(tableId, loadingId, data, columns) {
+                const tbody = document.querySelector(`#${tableId} tbody`);
+                const loadingRow = document.getElementById(loadingId);
+                if (loadingRow) loadingRow.remove();
+                tbody.innerHTML = '';
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="${columns.length}" class="loading-text">No data available.</td></tr>`;
                     return;
                 }
-                models.forEach(model => {
-                    const row = `
-                        <tr>
-                            <td>${model.model_name}</td>
-                            <td>${model.model_count.toLocaleString()}</td>
-                        </tr>`;
-                    topModelsBody.innerHTML += row;
+                data.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    columns.forEach(col => {
+                        const cell = document.createElement('td');
+                        if (col.key === 'rank') {
+                            cell.textContent = index + 1;
+                        } else {
+                            cell.textContent = format(item[col.key]) || 'N/A';
+                        }
+                        row.appendChild(cell);
+                    });
+                    tbody.appendChild(row);
                 });
             }
 
             function renderRarestGifts(gifts) {
-                rarestGiftsList.innerHTML = ''; // Clear loading
+                const list = document.getElementById('rarest-gifts-list');
+                list.innerHTML = '';
                 if (!gifts || gifts.length === 0) {
-                    rarestGiftsList.innerHTML = '<li class="loading-text">No rare gifts found.</li>';
+                    list.innerHTML = '<li class="loading-text">No rare gifts found.</li>';
                     return;
                 }
                 gifts.forEach(gift => {
-                    const rarityText = `with combined rarities of ${gift.combined_rarity_text}`;
-                    const item = `<li><b>"${gift.gift_name}":</b> Owned by '${gift.owner_username}', ${rarityText}.</li>`;
-                    rarestGiftsList.innerHTML += item;
+                    const cd = gift.collectible_data;
+                    const modelRarity = cd.model?.rarityPermille || 0;
+                    const backdropRarity = cd.backdrop?.rarityPermille || 0;
+                    const patternRarity = cd.pattern?.rarityPermille || 0;
+                    const totalRarity = modelRarity + backdropRarity + patternRarity;
+                    const item = document.createElement('li');
+                    item.className = 'stat-item';
+                    item.innerHTML = `<strong>${gift.gift_name} #${gift.collectible_number}</strong> <span class="value" title="Owner: @${gift.owner_username}">${totalRarity}/3000</span>`;
+                    list.appendChild(item);
                 });
             }
 
             function renderCollections(collections) {
-                collectionsContainer.innerHTML = ''; // Clear loading
+                const container = document.getElementById('collections-container');
+                container.innerHTML = '';
                 if (!collections || Object.keys(collections).length === 0) {
-                    collectionsContainer.innerHTML = '<p class="loading-text">No featured collections found.</p>';
+                    container.innerHTML = '<p class="loading-text">No featured collections found.</p>';
                     return;
                 }
 
                 for (const collectionName in collections) {
                     const owners = collections[collectionName];
+                    const collectionDiv = document.createElement('div');
+                    collectionDiv.className = 'collection-item';
+                    
                     let ownerRows = '';
-                    owners.forEach(owner => {
-                        ownerRows += `<tr><td>${owner.full_name} (${owner.username})</td><td>${owner.item_count.toLocaleString()}</td></tr>`;
-                    });
-
-                    if(ownerRows === '') {
-                        ownerRows = '<tr><td colspan="2" class="loading-text">No owners yet.</td></tr>';
+                    if (owners.length > 0) {
+                        owners.forEach(owner => {
+                            ownerRows += `<tr><td>@${owner.username}</td><td>${format(owner.item_count)}</td></tr>`;
+                        });
+                    } else {
+                        ownerRows = '<tr><td colspan="2" class="loading-text">No top owners yet.</td></tr>';
                     }
 
-                    const collectionHTML = `
-                        <div class="collection-item">
-                            <h4>${collectionName} Collection</h4>
-                            <table>
-                                <thead><tr><th>Owner</th><th>Count</th></tr></thead>
-                                <tbody>${ownerRows}</tbody>
-                            </table>
-                        </div>`;
-                    collectionsContainer.innerHTML += collectionHTML;
+                    collectionDiv.innerHTML = `
+                        <h4>${collectionName}</h4>
+                        <table>
+                            <thead><tr><th>Top Owner</th><th>Count</th></tr></thead>
+                            <tbody>${ownerRows}</tbody>
+                        </table>`;
+                    container.appendChild(collectionDiv);
                 }
+            }
+
+            function renderMintingChart(data) {
+                const ctx = document.getElementById('daily-minting-chart').getContext('2d');
+                if (mintingChart) {
+                    mintingChart.destroy();
+                }
+                
+                const labels = data.map(d => new Date(d.day));
+                const values = data.map(d => d.count);
+
+                mintingChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'New Collectibles Created',
+                            data: values,
+                            fill: true,
+                            backgroundColor: 'rgba(233, 69, 96, 0.2)',
+                            borderColor: 'rgba(233, 69, 96, 1)',
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: { unit: 'day' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: 'white' }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: 'white' }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
             }
 
             async function fetchAndRenderAll() {
                 try {
                     const response = await fetch(API_URL);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
+                    if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
                     const data = await response.json();
 
-                    renderGeneralStats(data.general_stats);
-                    renderTopHolders(data.top_gift_holders);
-                    renderTopModels(data.most_common_models);
+                    renderGeneralStats(data);
+                    renderUserEngagement(data);
+                    
+                    renderTable('top-holders-table', 'top-holders-loading', data.top_gift_holders, [
+                        { key: 'rank' }, { key: 'username' }, { key: 'gift_count' }
+                    ]);
+                    renderTable('top-models-table', 'top-models-loading', data.most_common_models, [
+                        { key: 'model_name' }, { key: 'model_count' }
+                    ]);
+                    renderTable('power-collectors-table', 'power-collectors-loading', data.power_collectors, [
+                        { key: 'username' }, { key: 'diversity_count' }
+                    ]);
+
                     renderRarestGifts(data.rarest_highlights);
                     renderCollections(data.featured_collections);
+                    renderMintingChart(data.daily_minting_rate);
 
                 } catch (error) {
                     console.error("Failed to fetch analytics data:", error);
-                    generalStatsList.innerHTML = `<li>Error: Could not load data.</li>`;
-                    topHoldersBody.innerHTML = `<tr><td colspan="4" class="loading-text">Error: Could not load data.</td></tr>`;
-                    topModelsBody.innerHTML = `<tr><td colspan="2" class="loading-text">Error: Could not load data.</td></tr>`;
-                    rarestGiftsList.innerHTML = `<li>Error: Could not load data.</li>`;
-                    collectionsContainer.innerHTML = `<p class="loading-text">Error: Could not load data.</p>`;
+                    const allLoaders = document.querySelectorAll('.loading-text');
+                    allLoaders.forEach(loader => {
+                        loader.textContent = 'Error: Could not load data.';
+                        if(loader.parentElement.tagName === 'TR') loader.colSpan = 10;
+                    });
                 }
             }
 
             fetchAndRenderAll();
+            // Set an interval to refresh the data every 60 seconds for a live feel
+            setInterval(fetchAndRenderAll, 60000);
         });
     </script>
 
 </body>
-  </html>
+</html>
