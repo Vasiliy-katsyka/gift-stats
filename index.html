@@ -185,8 +185,8 @@
                 render('economic-metrics-list', `
                     <li><strong>Daily Actions:</strong> <span>${em.daily_transaction_volume.toLocaleString()}</span></li>
                     <li><strong>Most Liquid (7d):</strong> <span>${em.most_liquid_collection_7d?.gift_name || 'N/A'}</span></li>
-                    <li><strong>Floor Price (Sim):</strong> <span>${em.floor_price_simulated.price} TON - ${em.floor_price_simulated.name}</span></li>
-                    <li><strong>Market Cap (Sim):</strong> <span>${em.market_cap_simulated.cap.toLocaleString()} TON - ${em.market_cap_simulated.name}</span></li>
+                    <li><strong>Floor Price (Sim):</strong> <span>${em.floor_price_simulated.price} Stars - ${em.floor_price_simulated.name}</span></li>
+                    <li><strong>Market Cap (Sim):</strong> <span>${em.market_cap_simulated.cap.toLocaleString()} Stars - ${em.market_cap_simulated.name}</span></li>
                 `);
 
                 // Fun Metrics
@@ -213,6 +213,11 @@
                 const chartContainer = document.getElementById('rarity-chart');
                 if (chartContainer) {
                     const ctx = chartContainer.getContext('2d');
+                    
+                    // **THE FIX IS HERE**
+                    // Get the CSS variable value using JavaScript before passing it to the chart
+                    const chartBorderColor = getComputedStyle(document.body).getPropertyValue('--card-bg').trim();
+
                     if (rarityChart) {
                         rarityChart.data.labels = chartLabels;
                         rarityChart.data.datasets[0].data = chartValues;
@@ -225,7 +230,7 @@
                                 datasets: [{
                                     data: chartValues,
                                     backgroundColor: ['#6e7681', '#4b8ee3', '#2ea043', '#a371f7', '#db6d28', '#e94560'],
-                                    borderColor: var(--card-bg),
+                                    borderColor: chartBorderColor, // Use the JS variable here
                                     borderWidth: 2,
                                 }]
                             },
@@ -253,7 +258,7 @@
             }
 
             fetchAndRender();
-            setInterval(fetchAndRender, 45000); // Refresh every 45 seconds
+            setInterval(fetchAndRender, 20000); // Refresh every 60 seconds for live data
         });
     </script>
 </body>
