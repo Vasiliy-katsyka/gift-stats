@@ -3,262 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Collectibles Dashboard</title>
+    <title>Ultimate Digital Collectibles Dashboard</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
         :root {
             --bg-color: #0d1117; --card-bg: #161b22; --text-color: #c9d1d9;
             --header-color: #ffffff; --accent-color: #238636; --highlight-color: #58a6ff;
-            --border-color: #30363d; --table-header-bg: #21262d; --green-glow: rgba(35, 134, 54, 0.5);
-            --blue-glow: rgba(88, 166, 255, 0.5);
+            --border-color: #30363d; --table-header-bg: #21262d;
+            --mythic-color: #ff8b66; --legendary-color: #ffc658; --epic-color: #a371f7;
+            --rare-color: #58a6ff; --uncommon-color: #3fb950; --common-color: #8b949e;
         }
         html { font-size: 13px; }
-        body {
-            margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-            background-color: var(--bg-color); color: var(--text-color);
-            height: 100vh; width: 100vw; overflow: hidden;
-        }
-        #main-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: auto 1fr 1fr;
-            gap: 1rem; padding: 1rem;
-            height: 100%; box-sizing: border-box;
-        }
-        .card {
-            background: var(--card-bg); border-radius: 6px;
-            padding: 0.8rem 1rem; border: 1px solid var(--border-color);
-            display: flex; flex-direction: column; overflow: hidden;
-        }
-        .card-title {
-            color: var(--header-color); margin: 0 0 0.8rem 0;
-            font-size: 0.9rem; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 1px; display: flex; align-items: center;
-        }
-        .card-title svg { width: 16px; height: 16px; margin-right: 8px; fill: var(--highlight-color); }
+        body { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background-color: var(--bg-color); color: var(--text-color); height: 100vh; width: 100vw; overflow: hidden; }
+        #main-container { display: grid; grid-template-columns: repeat(20, 1fr); grid-template-rows: auto repeat(12, 1fr); gap: 1rem; padding: 1rem; height: 100%; box-sizing: border-box; }
+        .card { background: var(--card-bg); border-radius: 6px; padding: 0.8rem; border: 1px solid var(--border-color); display: flex; flex-direction: column; overflow: hidden; }
+        .card-title { color: var(--highlight-color); margin: 0 0 0.6rem 0; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
         .card-content { flex-grow: 1; overflow: auto; scrollbar-width: none; }
         .card-content::-webkit-scrollbar { display: none; }
-        
+
         /* Grid Layout */
-        #header { grid-column: 1 / -1; grid-row: 1; text-align: center; }
-        #core-metrics-card { grid-column: 1 / 2; grid-row: 2 / 3; }
-        #user-metrics-card { grid-column: 1 / 2; grid-row: 3 / 4; }
-        #leaderboard-card { grid-column: 2 / 3; grid-row: 2 / 4; }
-        #gift-metrics-card { grid-column: 3 / 4; grid-row: 2 / 4; }
-        #economic-metrics-card { grid-column: 4 / 5; grid-row: 2 / 3; }
-        #fun-metrics-card { grid-column: 4 / 5; grid-row: 3 / 4; }
+        #header { grid-column: 1 / -1; grid-row: 1; text-align: center; padding-bottom: 0.5rem; }
+        #general-metrics { grid-column: 1 / 5; grid-row: 2 / 7; }
+        #user-metrics { grid-column: 1 / 5; grid-row: 7 / 13; }
+        #top-holders { grid-column: 5 / 9; grid-row: 2 / 8; }
+        #prolific-traders { grid-column: 5 / 9; grid-row: 8 / 13; }
+        #economic-metrics { grid-column: 9 / 13; grid-row: 2 / 7; }
+        #fun-metrics { grid-column: 9 / 13; grid-row: 7 / 13; }
+        #rarity-distribution { grid-column: 13 / 17; grid-row: 2 / 8; }
+        #system-metrics { grid-column: 13 / 17; grid-row: 8 / 13; }
+        #peak-hours { grid-column: 17 / -1; grid-row: 2 / 13; }
 
-        h1 { font-size: 2rem; margin: 0 0 0.5rem 0; color: var(--header-color); font-weight: 600; }
-        h1 span { font-size: 0.9rem; color: #8b949e; font-weight: 300; }
+        h1 { font-size: 1.8rem; margin: 0; color: var(--header-color); }
+        h1 span { font-size: 0.8rem; color: #8b949e; font-weight: 300; display: block; }
         
-        ul.stat-list { list-style: none; padding: 0; margin: 0; font-size: 0.9rem; }
-        ul.stat-list li {
-            padding: 0.5rem 0.1rem; display: flex; justify-content: space-between;
-            align-items: center; border-bottom: 1px solid var(--border-color);
-        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        th, td { padding: 0.35rem; text-align: left; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+        thead th { background-color: var(--table-header-bg); position: sticky; top: 0; }
+        
+        ul.stat-list { list-style: none; padding: 0; margin: 0; font-size: 0.8rem; }
+        ul.stat-list li { padding: 0.4rem 0.2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
         ul.stat-list li:last-child { border-bottom: none; }
-        ul.stat-list strong { color: var(--text-color); font-weight: 400; opacity: 0.9; }
+        ul.stat-list strong { color: var(--text-color); font-weight: 400; opacity: 0.8; }
         ul.stat-list span { font-weight: 700; color: var(--highlight-color); text-align: right; }
-        .loading-text, .error-text { text-align: center; padding: 1rem; font-style: italic; opacity: 0.7; }
+        .loading-text { text-align: center; padding: 1rem; font-style: italic; opacity: 0.7; }
         .error-text { color: #f85149; font-weight: 700; }
-        
-        .sub-card { margin-top: 1rem; }
-        .sub-card:first-child { margin-top: 0; }
-        .sub-card-title { font-size: 0.8rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-color); opacity: 0.8;}
-        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-        th, td { padding: 0.3rem; text-align: left; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
-        thead th { background-color: var(--table-header-bg); position: sticky; top: 0; font-weight: 600; }
-
-        .chart-container { position: relative; height: 120px; width: 100%; }
+        .tier-mythic { color: var(--mythic-color) !important; } .tier-legendary { color: var(--legendary-color) !important; } .tier-epic { color: var(--epic-color) !important; }
+        .tier-rare { color: var(--rare-color) !important; } .tier-uncommon { color: var(--uncommon-color) !important; } .tier-common { color: var(--common-color) !important; }
     </style>
 </head>
 <body>
+
     <div id="main-container">
-        <!-- SVG Icons Definition -->
-        <svg style="display:none">
-            <symbol id="icon-pulse" viewBox="0 0 24 24"><path d="M3,13H5.79L10.1,4.6L12.21,18L15,13H18L21,13V11H18.21L13.9,19.4L11.79,6L9,11H6V13H3Z"/></symbol>
-            <symbol id="icon-users" viewBox="0 0 24 24"><path d="M12,12C14.21,12 16,10.21 16,8C16,5.79 14.21,4 12,4C9.79,4 8,5.79 8,8C8,10.21 9.79,12 12,12M12,14C9.33,14 4,15.33 4,18V20H20V18C20,15.33 14.67,14 12,14Z"/></symbol>
-            <symbol id="icon-trophy" viewBox="0 0 24 24"><path d="M19,2H5A3,3 0 0,0 2,5V6A3,3 0 0,0 5,9H6V20H18V9H19A3,3 0 0,0 22,6V5A3,3 0 0,0 19,2M5,7A1,1 0 0,1 4,6V5A1,1 0 0,1 5,4H19A1,1 0 0,1 20,5V6A1,1 0 0,1 19,7H5M16,18H8V9H16V18Z"/></symbol>
-            <symbol id="icon-gift" viewBox="0 0 24 24"><path d="M22,13H20V15H18V13H16V11H18V9H20V11H22M18,3L15,6H11L13,2H9.5C9.09,2 8.75,2.3 8.6,2.65L2,13L8,18H14L21,9V4M12.5,15.5C11.67,15.5 11,14.83 11,14C11,13.17 11.67,12.5 12.5,12.5C13.33,12.5 14,13.17 14,14C14,14.83 13.33,15.5 12.5,15.5Z"/></symbol>
-            <symbol id="icon-chart" viewBox="0 0 24 24"><path d="M22,21H2V3H4V19H6V10H10V19H12V6H16V19H18V14H22V21Z"/></symbol>
-            <symbol id="icon-sparkles" viewBox="0 0 24 24"><path d="M12,2.6L9.3,8L3,9.3L7.9,13.4L6.6,19.8L12,16.5L17.4,19.8L16.1,13.4L21,9.3L14.7,8L12,2.6Z" /></symbol>
-        </svg>
+        <div id="header"><h1>Ultimate Ecosystem Dashboard <span id="last-updated"></span></h1></div>
 
-        <div id="header">
-            <h1>Ultimate Ecosystem Dashboard</h1>
-        </div>
-
-        <div id="core-metrics-card" class="card">
-            <h3 class="card-title"><svg><use href="#icon-pulse"></use></svg>Core Metrics</h3>
-            <div id="core-metrics-list" class="card-content stat-list"><p class="loading-text">Loading...</p></div>
-        </div>
-
-        <div id="user-metrics-card" class="card">
-            <h3 class="card-title"><svg><use href="#icon-users"></use></svg>User & Engagement</h3>
-            <div id="user-metrics-list" class="card-content stat-list"><p class="loading-text">Loading...</p></div>
-        </div>
-        
-        <div id="leaderboard-card" class="card">
-            <h3 class="card-title"><svg><use href="#icon-trophy"></use></svg>Leaderboards</h3>
-            <div class="card-content">
-                <div class="sub-card">
-                    <p class="sub-card-title">Top 5 Holders (By Quantity)</p>
-                    <table id="top-holders-table">
-                        <thead><tr><th>User</th><th>Count</th></tr></thead>
-                        <tbody id="top-holders-body"><p class="loading-text">Loading...</p></tbody>
-                    </table>
-                </div>
-                <div class="sub-card">
-                    <p class="sub-card-title">Top 5 Collectors (By Diversity)</p>
-                     <table id="power-collectors-table">
-                        <thead><tr><th>User</th><th>Unique Models</th></tr></thead>
-                        <tbody id="power-collectors-body"><p class="loading-text">Loading...</p></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        
-        <div id="gift-metrics-card" class="card">
-            <h3 class="card-title"><svg><use href="#icon-gift"></use></svg>Gift & Rarity Insights</h3>
-            <div class="card-content">
-                <div class="sub-card">
-                    <p class="sub-card-title">Rarity Tier Distribution</p>
-                    <div class="chart-container">
-                        <canvas id="rarity-chart"></canvas>
-                    </div>
-                </div>
-                <div class="sub-card">
-                     <p class="sub-card-title">Trait Popularity</p>
-                     <ul id="trait-popularity-list" class="stat-list"></ul>
-                </div>
-            </div>
-        </div>
-        
-        <div id="economic-metrics-card" class="card">
-             <h3 class="card-title"><svg><use href="#icon-chart"></use></svg>Economic Pulse</h3>
-             <div id="economic-metrics-list" class="card-content stat-list"><p class="loading-text">Loading...</p></div>
-        </div>
-
-        <div id="fun-metrics-card" class="card">
-            <h3 class="card-title"><svg><use href="#icon-sparkles"></use></svg>Community & Fun Facts</h3>
-            <div id="fun-metrics-list" class="card-content stat-list"><p class="loading-text">Loading...</p></div>
-        </div>
+        <div id="general-metrics" class="card"><h3 class="card-title">Core Metrics</h3><div class="card-content"><ul id="general-metrics-list" class="stat-list"></ul></div></div>
+        <div id="user-metrics" class="card"><h3 class="card-title">User Activity</h3><div class="card-content"><ul id="user-metrics-list" class="stat-list"></ul></div></div>
+        <div id="top-holders" class="card"><h3 class="card-title">Top Holders (Quantity)</h3><div class="card-content"><table id="top-holders-table"><thead><tr><th>Rank</th><th>Username</th><th># Gifts</th></tr></thead><tbody id="top-holders-body"></tbody></table></div></div>
+        <div id="prolific-traders" class="card"><h3 class="card-title">Top Traders (Simulated)</h3><div class="card-content"><table id="prolific-traders-table"><thead><tr><th>Rank</th><th>Username</th><th># Outgoing</th></tr></thead><tbody id="prolific-traders-body"></tbody></table></div></div>
+        <div id="economic-metrics" class="card"><h3 class="card-title">Market Snapshot</h3><div class="card-content"><ul id="economic-metrics-list" class="stat-list"></ul></div></div>
+        <div id="fun-metrics" class="card"><h3 class="card-title">Community Fun Facts</h3><div class="card-content"><ul id="fun-metrics-list" class="stat-list"></ul></div></div>
+        <div id="rarity-distribution" class="card"><h3 class="card-title">Rarity Distribution</h3><div class="card-content" style="display: flex; align-items: center; justify-content: center;"><canvas id="rarity-chart"></canvas></div></div>
+        <div id="system-metrics" class="card"><h3 class="card-title">System Clocks</h3><div class="card-content"><ul id="system-metrics-list" class="stat-list"></ul></div></div>
+        <div id="peak-hours" class="card"><h3 class="card-title">Peak Activity (UTC)</h3><div class="card-content"><canvas id="peak-hours-chart"></canvas></div></div>
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const API_URL = 'https://upgrade-a57g.onrender.com/api/stats';
-            let rarityChart = null;
+            let rarityChart = null, peakHoursChart = null;
 
-            function render(id, content) {
-                const el = document.getElementById(id);
-                if (el) el.innerHTML = content;
+            function render(id, content) { document.getElementById(id).innerHTML = content; }
+            function formatTime(seconds) {
+                if (!seconds || seconds < 1) return 'N/A';
+                const d = Math.floor(seconds / (3600*24));
+                const h = Math.floor(seconds % (3600*24) / 3600);
+                return `${d}d ${h}h`;
             }
             
             function renderAll(data) {
-                // Core Metrics
-                const cm = data.general_metrics;
-                render('core-metrics-list', `
-                    <li><strong>Total Gifts:</strong> <span>${cm.total_gifts.toLocaleString()}</span></li>
-                    <li><strong>Total Collectibles:</strong> <span>${cm.collectible_items.toLocaleString()}</span></li>
-                    <li><strong>Non-Collectibles:</strong> <span>${cm.non_collectible_items.toLocaleString()}</span></li>
+                // General Metrics
+                const gm = data.general_metrics;
+                render('general-metrics-list', `
+                    <li><strong>Total Gifts:</strong> <span>${gm.total_gifts.toLocaleString()}</span></li>
+                    <li><strong>Total Collectibles:</strong> <span>${gm.collectible_items.toLocaleString()}</span></li>
+                    <li><strong>Unique Owners:</strong> <span>${gm.unique_owners.toLocaleString()}</span></li>
+                    <li><strong>Avg. Gifts/User:</strong> <span>${gm.avg_gifts_per_user.toLocaleString()}</span></li>
+                    <li><strong>Hidden Gifts:</strong> <span>${gm.hidden_gift_count.toLocaleString()}</span></li>
                 `);
 
                 // User Metrics
                 const um = data.user_metrics;
                 render('user-metrics-list', `
-                    <li><strong>Total Unique Owners:</strong> <span>${cm.unique_owners.toLocaleString()}</span></li>
-                    <li><strong>Daily Active Users (Est):</strong> <span>${um.dau_approx.toLocaleString()}</span></li>
-                    <li><strong>30d Growth Rate:</strong> <span>${um.monthly_growth_rate}%</span></li>
-                    <li><strong>Avg Gifts / User:</strong> <span>${um.avg_gifts_per_user}</span></li>
-                    <li><strong>Active Giveaways:</strong> <span>${um.active_giveaways}</span></li>
-                    <li><strong>Avg Giveaway Participants:</strong> <span>${um.avg_giveaway_participants}</span></li>
+                    <li><strong>Active Users (24h):</strong> <span>${um.active_users_24h.toLocaleString()}</span></li>
+                    <li><strong>New Users (24h):</strong> <span>+${um.new_users_24h.toLocaleString()}</span></li>
+                    <li><strong>Active Giveaways:</strong> <span>${um.active_giveaways.toLocaleString()}</span></li>
+                    <li><strong>Avg. Giveaway Participants:</strong> <span>${um.avg_giveaway_participants.toLocaleString()}</span></li>
                 `);
 
-                // Leaderboards
-                const lb = data.leaderboards;
-                render('top-holders-body', lb.top_holders.map(h => `<tr><td>${h.username}</td><td>${h.count.toLocaleString()}</td></tr>`).join(''));
-                render('power-collectors-body', lb.power_collectors.map(c => `<tr><td>${c.username}</td><td>${c.count.toLocaleString()}</td></tr>`).join(''));
-                
+                // Tables
+                render('top-holders-body', um.top_holders.map((h, i) => `<tr><td>${i+1}</td><td>${h.username}</td><td>${h.gift_count.toLocaleString()}</td></tr>`).join(''));
+                render('prolific-traders-body', um.prolific_traders.map((t, i) => `<tr><td>${i+1}</td><td>${t.username}</td><td>${t.transfers_out.toLocaleString()}</td></tr>`).join(''));
+
                 // Economic Metrics
                 const em = data.economic_metrics;
-                render('economic-metrics-list', `
-                    <li><strong>Daily Actions:</strong> <span>${em.daily_transaction_volume.toLocaleString()}</span></li>
-                    <li><strong>Most Liquid (7d):</strong> <span>${em.most_liquid_collection_7d?.gift_name || 'N/A'}</span></li>
-                    <li><strong>Floor Price (Sim):</strong> <span>${em.floor_price_simulated.price} Stars - ${em.floor_price_simulated.name}</span></li>
-                    <li><strong>Market Cap (Sim):</strong> <span>${em.market_cap_simulated.cap.toLocaleString()} Stars - ${em.market_cap_simulated.name}</span></li>
+                const marketContent = Object.entries(em.market_caps).map(([name, cap]) => 
+                    `<li><strong>${name} Cap (Sim):</strong> <span>${cap.toLocaleString()}</span></li>`
+                ).join('') + Object.entries(em.floor_prices).map(([name, num]) => 
+                    `<li><strong>${name} Floor (Sim):</strong> <span>#${num.toLocaleString()}</span></li>`
+                ).join('');
+                render('economic-metrics-list', marketContent);
+
+                // System Metrics
+                const sm = data.system_metrics;
+                render('system-metrics-list', `
+                    <li><strong>User Retention (7d):</strong> <span>${sm.user_retention_7d_from_prev_month}%</span></li>
+                    <li><strong>Avg. Unbox Time:</strong> <span>${formatTime(sm.avg_non_collectible_lifespan_sec)}</span></li>
                 `);
 
                 // Fun Metrics
                 const fm = data.fun_metrics;
                 render('fun-metrics-list', `
-                    <li><strong>Peak Hour (UTC):</strong> <span>${fm.peak_activity_hour_utc !== null ? `${fm.peak_activity_hour_utc}:00` : 'N/A'}</span></li>
-                    <li><strong>First-Ever Mint:</strong> <span>${fm.first_ever_mint?.gift_name || 'N/A'}</span></li>
-                    <li><strong>Most Hoarded Gift:</strong> <span>${fm.most_hoarded_gift?.gift_name || 'N/A'}</span></li>
-                    <li><strong>Avg. Username Length:</strong> <span>${fm.avg_username_length} chars</span></li>
+                    <li><strong>Luckiest Upgrader:</strong> <span>${fm.luckiest_upgrader?.username || 'N/A'}</span></li>
+                    <li><strong>Top Gifter (Sim):</strong> <span>${fm.top_gifter_simulation?.username || 'N/A'}</span></li>
                 `);
-
-                // Trait Popularity
-                const gim = data.gift_metrics;
-                render('trait-popularity-list', `
-                    <li><strong>Most Popular Backdrop:</strong> <span>${gim.most_popular_backdrop?.name || 'N/A'}</span></li>
-                    <li><strong>Most Popular Symbol:</strong> <span>${gim.most_popular_pattern?.name || 'N/A'}</span></li>
-                    <li><strong>Most Worn Gift:</strong> <span>${gim.most_worn_gift ? `${gim.most_worn_gift.gift_name} #${gim.most_worn_gift.collectible_number}` : 'N/A'}</span></li>
-                `);
-
+                
                 // Rarity Chart
-                const rarityData = gim.rarity_distribution;
-                const chartLabels = Object.keys(rarityData);
-                const chartValues = Object.values(rarityData);
-                const chartContainer = document.getElementById('rarity-chart');
-                if (chartContainer) {
-                    const ctx = chartContainer.getContext('2d');
-                    
-                    // **THE FIX IS HERE**
-                    // Get the CSS variable value using JavaScript before passing it to the chart
-                    const chartBorderColor = getComputedStyle(document.body).getPropertyValue('--card-bg').trim();
+                const rd = data.gift_metrics.rarity_distribution;
+                const rarityLabels = Object.keys(rd);
+                const rarityValues = Object.values(rd);
+                const rarityColors = rarityLabels.map(label => getComputedStyle(document.documentElement).getPropertyValue(`--${label.toLowerCase()}-color`).trim());
 
-                    if (rarityChart) {
-                        rarityChart.data.labels = chartLabels;
-                        rarityChart.data.datasets[0].data = chartValues;
-                        rarityChart.update();
-                    } else {
-                        rarityChart = new Chart(ctx, {
-                            type: 'doughnut',
-                            data: {
-                                labels: chartLabels,
-                                datasets: [{
-                                    data: chartValues,
-                                    backgroundColor: ['#6e7681', '#4b8ee3', '#2ea043', '#a371f7', '#db6d28', '#e94560'],
-                                    borderColor: chartBorderColor, // Use the JS variable here
-                                    borderWidth: 2,
-                                }]
-                            },
-                            options: {
-                                responsive: true, maintainAspectRatio: false,
-                                plugins: {
-                                    legend: { position: 'right', labels: { color: '#c9d1d9', boxWidth: 10, font: { size: 10 } } }
-                                }
-                            }
-                        });
+                if (rarityChart) { rarityChart.destroy(); }
+                rarityChart = new Chart(document.getElementById('rarity-chart').getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: rarityLabels,
+                        datasets: [{ data: rarityValues, backgroundColor: rarityColors, borderColor: var(--card-bg), borderWidth: 2 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: '#c9d1d9', font: {size: 10} } } } }
+                });
+
+                // Peak Hours Chart
+                const ph = data.system_metrics.peak_activity_hours;
+                const hourLabels = [...Array(24).keys()].map(h => h.toString().padStart(2,'0'));
+                const hourValues = hourLabels.map(h => ph[h] || 0);
+                if(peakHoursChart) { peakHoursChart.destroy(); }
+                peakHoursChart = new Chart(document.getElementById('peak-hours-chart').getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: hourLabels, datasets: [{ data: hourValues, backgroundColor: '#3fb950' }] },
+                    options: {
+                        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { ticks: { color: '#8b949e', font: {size: 8}}, grid: { color: '#30363d', drawOnChartArea: false } },
+                            x: { ticks: { display: false }, grid: { color: '#30363d' } }
+                        }
                     }
-                }
+                });
             }
 
             async function fetchAndRender() {
                 try {
                     const response = await fetch(API_URL);
-                    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                    if (!response.ok) throw new Error(`API Offline: ${response.status}`);
                     const data = await response.json();
                     renderAll(data);
+                    document.getElementById('last-updated').innerText = `| Last Updated: ${new Date().toLocaleTimeString()}`;
                 } catch (error) {
-                    console.error("Failed to fetch dashboard data:", error);
-                    document.getElementById('header').innerHTML = `<h1>Dashboard Offline</h1><p class="error-text">${error.message}</p>`;
+                    document.getElementById('header').innerHTML = `<h1>Dashboard Offline</h1><span class="error-text">${error.message}</span>`;
                 }
             }
 
             fetchAndRender();
-            setInterval(fetchAndRender, 20000); // Refresh every 60 seconds for live data
+            setInterval(fetchAndRender, 30000); // Refresh every 30 seconds
         });
     </script>
 </body>
