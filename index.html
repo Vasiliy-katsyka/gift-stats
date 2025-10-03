@@ -21,16 +21,16 @@
         .card-content { flex-grow: 1; overflow: auto; scrollbar-width: none; }
         .card-content::-webkit-scrollbar { display: none; }
 
-        /* UPDATED Grid Layout */
+        /* New Grid Layout for more cards */
         #header { grid-column: 1 / -1; grid-row: 1; text-align: center; padding-bottom: 0.5rem; }
-        #general-metrics { grid-column: 1 / 5; grid-row: 2 / 7; }
-        #user-metrics { grid-column: 1 / 5; grid-row: 7 / 13; }
+        #general-metrics { grid-column: 1 / 5; grid-row: 2 / 8; }
+        #user-metrics { grid-column: 1 / 5; grid-row: 8 / 13; }
         #top-holders { grid-column: 5 / 9; grid-row: 2 / 8; }
-        #prolific-traders { grid-column: 5 / 9; grid-row: 8 / 13; }
-        /* #economic-metrics was here */
-        #fun-metrics { grid-column: 9 / 13; grid-row: 2 / 13; } /* Stretched to fill space */
+        #specialists-leaderboard { grid-column: 5 / 9; grid-row: 8 / 13; }
+        #economic-metrics { grid-column: 9 / 13; grid-row: 2 / 8; }
+        #top-market-listings { grid-column: 9 / 13; grid-row: 8 / 13; }
         #rarity-distribution { grid-column: 13 / 17; grid-row: 2 / 8; }
-        #system-metrics { grid-column: 13 / 17; grid-row: 8 / 13; }
+        #fun-metrics { grid-column: 13 / 17; grid-row: 8 / 13; }
         #peak-hours { grid-column: 17 / -1; grid-row: 2 / 13; }
 
         h1 { font-size: 1.8rem; margin: 0; color: var(--header-color); }
@@ -57,15 +57,17 @@
         <div id="header"><h1>Ultimate Ecosystem Dashboard <span id="last-updated"></span></h1></div>
 
         <div id="general-metrics" class="card"><h3 class="card-title">Core Metrics</h3><div class="card-content"><ul id="general-metrics-list" class="stat-list"><li class="loading-text">Loading...</li></ul></div></div>
-        <div id="user-metrics" class="card"><h3 class="card-title">User Activity</h3><div class="card-content"><ul id="user-metrics-list" class="stat-list"><li class="loading-text">Loading...</li></ul></div></div>
-        <div id="top-holders" class="card"><h3 class="card-title">Top Holders (Quantity)</h3><div class="card-content"><table id="top-holders-table"><thead><tr><th>Rank</th><th>Username</th><th># Gifts</th></tr></thead><tbody id="top-holders-body"><li class="loading-text">Loading...</li></tbody></table></div></div>
-        <div id="prolific-traders" class="card"><h3 class="card-title">Top Traders (Simulated)</h3><div class="card-content"><table id="prolific-traders-table"><thead><tr><th>Rank</th><th>Username</th><th># Outgoing</th></tr></thead><tbody id="prolific-traders-body"><li class="loading-text">Loading...</li></tbody></table></div></div>
+        <div id="user-metrics" class="card"><h3 class="card-title">Community Activity</h3><div class="card-content"><ul id="user-metrics-list" class="stat-list"><li class="loading-text">Loading...</li></ul></div></div>
         
-        <!-- economic-metrics card REMOVED -->
+        <div id="top-holders" class="card"><h3 class="card-title">Top Holders (Quantity)</h3><div class="card-content"><table id="top-holders-table"><thead><tr><th>Rank</th><th>Username</th><th># Gifts</th></tr></thead><tbody id="top-holders-body"><li class="loading-text">Loading...</li></tbody></table></div></div>
+        <div id="specialists-leaderboard" class="card"><h3 class="card-title">Top Specialists</h3><div class="card-content"><table id="specialists-table"><thead><tr><th>User</th><th>Collection</th><th>Count</th></tr></thead><tbody id="specialists-body"><li class="loading-text">Loading...</li></tbody></table></div></div>
+        
+        <div id="economic-metrics" class="card"><h3 class="card-title">Market Vitals</h3><div class="card-content"><ul id="economic-metrics-list" class="stat-list"><li class="loading-text">Loading...</li></ul></div></div>
+        <div id="top-market-listings" class="card"><h3 class="card-title">Top Market Listings</h3><div class="card-content"><table id="top-listings-table"><thead><tr><th>Item</th><th>Price (Stars)</th></tr></thead><tbody id="top-listings-body"><li class="loading-text">Loading...</li></tbody></table></div></div>
 
-        <div id="fun-metrics" class="card"><h3 class="card-title">Community Fun Facts</h3><div class="card-content"><ul id="fun-metrics-list" class="stat-list"><li class="loading-text">Loading...</li></ul></div></div>
         <div id="rarity-distribution" class="card"><h3 class="card-title">Rarity Distribution</h3><div class="card-content" style="display: flex; align-items: center; justify-content: center;"><canvas id="rarity-chart"></canvas></div></div>
-        <div id="system-metrics" class="card"><h3 class="card-title">System Clocks</h3><div class="card-content"><ul id="system-metrics-list" class="stat-list"><li class="loading-text">Loading...</li></ul></div></div>
+        <div id="fun-metrics" class="card"><h3 class="card-title">Trophy Case</h3><div class="card-content"><ul id="fun-metrics-list" class="stat-list"><li class="loading-text">Loading...</li></ul></div></div>
+        
         <div id="peak-hours" class="card"><h3 class="card-title">Peak Activity (UTC)</h3><div class="card-content"><canvas id="peak-hours-chart"></canvas></div></div>
     </div>
     
@@ -85,45 +87,60 @@
                 if (!seconds || seconds < 1) return 'N/A';
                 const d = Math.floor(seconds / (3600*24));
                 const h = Math.floor(seconds % (3600*24) / 3600);
-                return `${d}d ${h}h`;
+                const m = Math.floor(seconds % 3600 / 60);
+                let parts = [];
+                if (d > 0) parts.push(`${d}d`);
+                if (h > 0) parts.push(`${h}h`);
+                if (m > 0 && d === 0) parts.push(`${m}m`);
+                return parts.join(' ') || '< 1m';
             }
             
             function renderAll(data) {
                 // General Metrics
                 const gm = data.general_metrics;
                 render('general-metrics-list', `
-                    <li><strong>Total Gifts:</strong> <span>${gm.total_gifts.toLocaleString()}</span></li>
-                    <li><strong>Total Collectibles:</strong> <span>${gm.collectible_items.toLocaleString()}</span></li>
-                    <li><strong>Unique Owners:</strong> <span>${gm.unique_owners.toLocaleString()}</span></li>
-                    <li><strong>Avg. Gifts/User:</strong> <span>${gm.avg_gifts_per_user.toLocaleString()}</span></li>
-                    <li><strong>Hidden Gifts:</strong> <span>${gm.hidden_gift_count.toLocaleString()}</span></li>
+                    <li><strong>Total Gifts Created:</strong> <span>${(gm.total_gifts || 0).toLocaleString()}</span></li>
+                    <li><strong>Total Collectibles:</strong> <span>${(gm.collectible_items || 0).toLocaleString()}</span></li>
+                    <li><strong>Unique Owners:</strong> <span>${(gm.unique_owners || 0).toLocaleString()}</span></li>
+                    <li><strong>Avg. Gifts / User:</strong> <span>${(gm.avg_gifts_per_user || 0).toFixed(2)}</span></li>
+                    <li><strong>Gifts Currently Pinned:</strong> <span>${(gm.total_pinned_gifts || 0).toLocaleString()}</span></li>
+                    <li><strong>Gifts Currently Worn:</strong> <span>${(gm.total_worn_gifts || 0).toLocaleString()}</span></li>
+                    <li><strong>Hidden Gifts:</strong> <span>${(gm.hidden_gift_count || 0).toLocaleString()}</span></li>
                 `);
 
                 // User Metrics
                 const um = data.user_metrics;
                 render('user-metrics-list', `
-                    <li><strong>Active Users (24h):</strong> <span>${um.active_users_24h.toLocaleString()}</span></li>
-                    <li><strong>New Users (24h):</strong> <span>+${um.new_users_24h.toLocaleString()}</span></li>
+                    <li><strong>Active Users (24h):</strong> <span>${(um.active_users_24h || 0).toLocaleString()}</span></li>
+                    <li><strong>New Users (24h):</strong> <span>+${(um.new_users_24h || 0).toLocaleString()}</span></li>
+                    <li><strong>Total Wall Posts:</strong> <span>${(um.total_posts || 0).toLocaleString()}</span></li>
+                    <li><strong>Total Reactions:</strong> <span>${(um.total_reactions || 0).toLocaleString()}</span></li>
+                    <li><strong>Active Giveaways:</strong> <span>${(um.active_giveaways || 0).toLocaleString()}</span></li>
+                `);
+
+                // Economic Metrics
+                const em = data.economic_metrics;
+                render('economic-metrics-list', `
+                    <li><strong>Market Cap (Stars):</strong> <span>${(em.total_market_cap || 0).toLocaleString()}</span></li>
+                    <li><strong>Avg. Listing Price:</strong> <span>${Math.round(em.avg_listing_price || 0).toLocaleString()}</span></li>
+                    <li><strong>24h Volume (Sim):</strong> <span>${(em.trading_volume_24h || 0).toLocaleString()}</span></li>
+                    <li><strong>Sell-Thru Rate (Sim):</strong> <span>${(em.sell_through_rate_percent || 0)}%</span></li>
                 `);
 
                 // Tables
-                render('top-holders-body', um.top_holders.map((h, i) => `<tr><td>${i+1}</td><td>${h.username}</td><td>${h.gift_count.toLocaleString()}</td></tr>`).join(''));
-                render('prolific-traders-body', um.prolific_traders.map((t, i) => `<tr><td>${i+1}</td><td>${t.username}</td><td>${t.transfers_out.toLocaleString()}</td></tr>`).join(''));
+                const lb = data.leaderboards;
+                render('top-holders-body', (lb.top_holders || []).map((h, i) => `<tr><td>${i+1}</td><td>${h.username}</td><td>${h.gift_count.toLocaleString()}</td></tr>`).join(''));
+                render('specialists-body', (lb.specialists || []).map((s) => `<tr><td>${s.username}</td><td>${s.gift_name}</td><td>${s.count_for_gift.toLocaleString()}</td></tr>`).join(''));
+                render('top-listings-body', (em.top_market_listings || []).map(l => `<tr><td>${l.gift_name} #${l.collectible_number}</td><td>${l.sale_price.toLocaleString()}</td></tr>`).join(''));
 
-                // REMOVED Economic Metrics rendering block
-
-                // System Metrics
+                // Fun Metrics & Trophy Case
                 const sm = data.system_metrics;
-                render('system-metrics-list', `
-                    <li><strong>User Retention (7d):</strong> <span>${sm.user_retention_7d_from_prev_month}%</span></li>
-                    <li><strong>Avg. Unbox Time:</strong> <span>${formatTime(sm.avg_non_collectible_lifespan_sec)}</span></li>
-                `);
-
-                // Fun Metrics
-                const fm = data.fun_metrics;
+                const gm_fun = data.gift_metrics;
+                const firstOfKindHtml = (sm.fun_facts?.first_of_its_kind || []).map(f => `<li><strong>#1 ${f.gift_name}:</strong> <span>@${f.username}</span></li>`).join('');
                 render('fun-metrics-list', `
-                    <li><strong>Luckiest Upgrader:</strong> <span>${fm.luckiest_upgrader?.username || 'N/A'}</span></li>
-                    <li><strong>Top Gifter (Sim):</strong> <span>${fm.top_gifter_simulation?.username || 'N/A'}</span></li>
+                    <li><strong>Most Upgraded Gift:</strong> <span>${gm_fun.most_popular_upgrade_base?.gift_name || 'N/A'}</span></li>
+                    <li><strong>Avg. Unbox Time:</strong> <span>${formatTime(sm.avg_non_collectible_lifespan_sec)}</span></li>
+                    ${firstOfKindHtml}
                 `);
                 
                 // Rarity Chart
